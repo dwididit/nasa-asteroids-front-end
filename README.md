@@ -1,5 +1,13 @@
 # NASA Asteroids - Front End
 
+## Clone the Repository
+
+```bash
+gh repo clone dwididit/nasa-asteroids-front-end
+cd nasa-asteroids-front-end
+```
+
+
 ## Project setup
 ```
 npm install
