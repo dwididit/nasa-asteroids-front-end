@@ -5,6 +5,13 @@
 npm install
 ```
 
+### Setup .env
+
+Create .env file
+```bash
+VUE_APP_API_BASE_URL=http://your-api-endpoint.com
+```
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve
