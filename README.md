@@ -5,9 +5,8 @@
 npm install
 ```
 
-### Setup .env
+### Create .env file
 
-Create .env file
 ```bash
 VUE_APP_API_BASE_URL=http://your-api-endpoint.com
 ```
