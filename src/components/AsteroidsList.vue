@@ -133,10 +133,21 @@
       </form>
     </div>
 
-    <!-- Loading spinner -->
-    <div v-if="loading" class="text-center">
-      <div class="spinner-border text-primary" role="status">
-        <span class="sr-only">Loading...</span>
+    <!-- Modern loading spinner -->
+    <div ref="loadingSpinner" v-if="loading" class="text-center">
+      <div class="lds-spinner">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
       </div>
     </div>
 
@@ -280,11 +291,12 @@ export default {
     async fetchAsteroids() {
       this.loading = true;
       this.error = null;
-      this.asteroidById = null; // Clear asteroid by ID result
-      this.asteroidCount = null; // Clear asteroid count result
+      this.asteroidById = null;
+      this.asteroidCount = null;
+      this.scrollToLoading();
       try {
         const response = await axios.get(
-          "http://localhost:8080/asteroids/closest",
+          `${process.env.VUE_APP_API_BASE_URL}/asteroids/closest`,
           {
             params: {
               startDate: this.startDate,
@@ -292,23 +304,9 @@ export default {
             },
           }
         );
-        console.log("Response Data for Date Range:", response.data); // Debugging
         this.asteroids = response.data.asteroids;
       } catch (error) {
-        if (error.response) {
-          // Extracting error details from the response
-          this.error = {
-            status: error.response.data.status,
-            message: error.response.data.message,
-            details: error.response.data.details,
-          };
-        } else {
-          this.error = {
-            status: "Error",
-            message: "Failed to fetch asteroids.",
-          };
-        }
-        console.error(error);
+        this.handleError(error);
       } finally {
         this.loading = false;
       }
@@ -316,29 +314,16 @@ export default {
     async fetchAsteroidById() {
       this.loading = true;
       this.error = null;
-      this.asteroids = []; // Clear asteroid by date range results
-      this.asteroidCount = null; // Clear asteroid count result
+      this.asteroids = [];
+      this.asteroidCount = null;
+      this.scrollToLoading();
       try {
         const response = await axios.get(
-          `http://localhost:8080/asteroids/${this.asteroidId}`
+          `${process.env.VUE_APP_API_BASE_URL}/asteroids/${this.asteroidId}`
         );
-        console.log("Response Data for ID:", response.data); // Debugging
         this.asteroidById = response.data.asteroid[0];
       } catch (error) {
-        if (error.response) {
-          // Extracting error details from the response
-          this.error = {
-            status: error.response.data.status,
-            message: error.response.data.message,
-            details: error.response.data.details,
-          };
-        } else {
-          this.error = {
-            status: "Error",
-            message: "Failed to fetch asteroid by ID.",
-          };
-        }
-        console.error(error);
+        this.handleError(error);
       } finally {
         this.loading = false;
       }
@@ -346,34 +331,21 @@ export default {
     async fetchAsteroidCountByDistance() {
       this.loading = true;
       this.error = null;
-      this.asteroids = []; // Clear asteroid by date range results
-      this.asteroidById = null; // Clear asteroid by ID result
+      this.asteroids = [];
+      this.asteroidById = null;
+      this.scrollToLoading();
       try {
         const response = await axios.get(
-          `http://localhost:8080/asteroids/count-by-distance`,
+          `${process.env.VUE_APP_API_BASE_URL}/asteroids/count-by-distance`,
           {
             params: {
               distance: this.distance,
             },
           }
         );
-        console.log("Response Data for Count by Distance:", response.data); // Debugging
         this.asteroidCount = response.data.count;
       } catch (error) {
-        if (error.response) {
-          // Extracting error details from the response
-          this.error = {
-            status: error.response.data.status,
-            message: error.response.data.message,
-            details: error.response.data.details,
-          };
-        } else {
-          this.error = {
-            status: "Error",
-            message: "Failed to fetch asteroid count by distance.",
-          };
-        }
-        console.error(error);
+        this.handleError(error);
       } finally {
         this.loading = false;
       }
@@ -381,10 +353,11 @@ export default {
     async storeTop10Asteroids() {
       this.loading = true;
       this.error = null;
-      this.storeResult = null; // Clear previous store result
+      this.storeResult = null;
+      this.scrollToLoading();
       try {
         const response = await axios.post(
-          `http://localhost:8080/asteroids/store-top10`,
+          `${process.env.VUE_APP_API_BASE_URL}/asteroids/store-top10`,
           null,
           {
             params: {
@@ -393,32 +366,137 @@ export default {
             },
           }
         );
-        console.log("Store Top 10 Response:", response.data); // Debugging
         this.storeResult = response.data;
       } catch (error) {
-        if (error.response) {
-          // Extracting error details from the response
-          this.storeResult = {
-            status: error.response.data.status,
-            message: error.response.data.message,
-            details: error.response.data.details,
-          };
-        } else {
-          this.storeResult = {
-            status: 500,
-            message: "Error storing top 10 asteroids.",
-            details: "End date is maximum 7 days after start date.",
-          };
-        }
-        console.error(error);
+        this.handleError(error);
       } finally {
         this.loading = false;
       }
     },
+    scrollToLoading() {
+      this.$nextTick(() => {
+        if (this.$refs.loadingSpinner) {
+          this.$refs.loadingSpinner.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    },
+    handleError(error) {
+      if (error.response) {
+        this.error = {
+          status: error.response.data.status,
+          message: error.response.data.message,
+          details: error.response.data.details,
+        };
+      } else {
+        this.error = {
+          status: "Error",
+          message: "An error occurred while fetching data.",
+        };
+      }
+    },
+  },
+  mounted() {
+    this.$nextTick(() => {
+      if (this.$refs.loadingSpinner) {
+        this.$refs.loadingSpinner.scrollIntoView({ behavior: "smooth" });
+      }
+    });
   },
 };
 </script>
 
 <style scoped>
-/* Add any custom styles here */
+/* Modern spinner styles */
+.lds-spinner {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.lds-spinner div {
+  transform-origin: 40px 40px;
+  animation: lds-spinner 1.2s linear infinite;
+}
+
+.lds-spinner div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 3px;
+  left: 37px;
+  width: 6px;
+  height: 18px;
+  border-radius: 20%;
+  background: #007bff;
+}
+
+.lds-spinner div:nth-child(1) {
+  transform: rotate(0deg);
+  animation-delay: -1.1s;
+}
+
+.lds-spinner div:nth-child(2) {
+  transform: rotate(30deg);
+  animation-delay: -1s;
+}
+
+.lds-spinner div:nth-child(3) {
+  transform: rotate(60deg);
+  animation-delay: -0.9s;
+}
+
+.lds-spinner div:nth-child(4) {
+  transform: rotate(90deg);
+  animation-delay: -0.8s;
+}
+
+.lds-spinner div:nth-child(5) {
+  transform: rotate(120deg);
+  animation-delay: -0.7s;
+}
+
+.lds-spinner div:nth-child(6) {
+  transform: rotate(150deg);
+  animation-delay: -0.6s;
+}
+
+.lds-spinner div:nth-child(7) {
+  transform: rotate(180deg);
+  animation-delay: -0.5s;
+}
+
+.lds-spinner div:nth-child(8) {
+  transform: rotate(210deg);
+  animation-delay: -0.4s;
+}
+
+.lds-spinner div:nth-child(9) {
+  transform: rotate(240deg);
+  animation-delay: -0.3s;
+}
+
+.lds-spinner div:nth-child(10) {
+  transform: rotate(270deg);
+  animation-delay: -0.2s;
+}
+
+.lds-spinner div:nth-child(11) {
+  transform: rotate(300deg);
+  animation-delay: -0.1s;
+}
+
+.lds-spinner div:nth-child(12) {
+  transform: rotate(330deg);
+  animation-delay: 0s;
+}
+
+@keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 </style>
